@@ -1,3 +1,5 @@
 fastapi
 pandas
 uvicorn
+psycopg[binary,pool]
+python-dotenv

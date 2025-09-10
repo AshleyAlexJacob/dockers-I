@@ -38,6 +38,7 @@ pip-delete-this-directory.txt
 
 docker-compose.yaml
 
+README.md
 output/
 # Unit test / coverage reports
 htmlcov/
