@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: nisr-postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: nisr
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local@1234
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nisr-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nisr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: nisr-analytics-backend:1.0
+    container_name: nisr-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: "postgresql://postgres:local%401234@postgres:5432/nisr"
+      PYTHONUNBUFFERED: "1"
+    networks:
+      - nisr-network
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./output:/app/output
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  nisr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
